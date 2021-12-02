@@ -1,0 +1,25 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>io.github.jaqat</groupId>
+    <artifactId>tests-skipper-parent</artifactId>
+    <packaging>pom</packaging>
+    <version>1.0</version>
+
+    <properties>
+        <!-- Java -->
+        <java.version>13</java.version>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+
+    </properties>
+
+    <name>Parent for tests skipper</name>
+
+    <modules>
+        <module>skipper-core</module>
+        <module>skipper-junit5</module>
+    </modules>
+
+
+</project>
