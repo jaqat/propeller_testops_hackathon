@@ -1,0 +1,28 @@
+version: '3.4'
+
+networks:
+  hazelcast-net:
+    driver: bridge
+
+services:
+    hazelcast:
+        image: hazelcast/hazelcast:3.12.6
+        restart: always
+        container_name: hazelcast
+        networks:
+        - hazelcast-net
+        environment:
+        - "JAVA_OPTS=-Dhazelcast.shutdownhook.policy=GRACEFUL
+                     -Dhazelcast.rest.enabled=true
+                    "
+
+    nginx-hazelcast:
+        image: nginx
+        container_name: nginx-hazelcast
+        ports:
+        - 5701:5701
+        volumes:
+        - ./nginx:/etc/nginx/conf.d/
+        networks:
+         - hazelcast-net
+        restart: always
