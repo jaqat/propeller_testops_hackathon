@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Link form</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <style>
+        #error_text {
+            font-size: 15px;
+        }
+
+        .title_text{
+            font-size: 17px;
+        }
+    </style>
+    <script type="text/javascript">
+        var isBugsForTestExist = false;
+        var storageDataKey = "{storageDataKey}";
+        var testManagementSystemUrl = "{bugTrackerBrowseUrl}";
+        var successSaveStatus = 1;
+        var errorSaveStatus = -1;
+
+        $(document).ready(function () {
+            $("textarea").on('click', function (event){
+               hideError();
+            });
+            getDataForTest(getTestId());
+        });
+
+        function deleteBugLink(){
+            var data = getAllBugsData();
+            if(data !== null) {
+                var dataJson = JSON.parse(data);
+                var testId = getTestId();
+                var newDataJson = [];
+                $.each(dataJson , function(index, value){
+                    if(value.testId !== testId) {
+                        newDataJson.push(value);
+                    }
+                });
+                var saveStatus = saveData(newDataJson);
+                if(saveStatus === successSaveStatus) {
+                    getDataForTest(testId);
+                    isBugsForTestExist = false;
+                    setFieldsValues('','');
+                    setDeleteButtonState(false);
+                }
+            }
+        }
+
+        function saveData(dataJson) {
+            var status;
+            $.ajax({
+                type: 'post',
+                url: getRequestBase() + storageDataKey,
+                async: false,
+                dataType: 'text',
+                data : JSON.stringify(dataJson),
+                success: function(data) {
+                    showSuccessMessage("Link saved successfully");
+                    status = successSaveStatus;
+                },
+                error: function(data){
+                    showError("Error while read data from storage");
+                    status = errorSaveStatus;
+                }
+            });
+            return status;
+        }
+        
+        
+        function getErrorDescription() {
+            return $("#error_field").val();
+        }
+
+
+        function getBugNumber() {
+            return $("#task_number").val();
+        }
+
+        function addNewBugData() {
+            var data = getAllBugsData();
+            if(data !== null) {
+                var bugs = JSON.parse(data);
+                var bugNumber = getBugNumber();
+                var errorDescription = getErrorDescription();
+                var testId = getTestId();
+                if(bugNumber === '') {
+                    showError("Task id field is empty.");
+                } else if(errorDescription === '') {
+                    showError("Error text field is empty.");
+                } else if (testId === '') {
+                    showError("test id is empty. Maybe some error while generate form.");
+                } else {
+                    var bugData = {
+                        testId : testId,
+                        taskId : bugNumber,
+                        errorMessage : errorDescription
+                    };
+                    bugs.push(bugData);
+                    var saveStatus = saveData(bugs);
+                    if(saveStatus === successSaveStatus) {
+                        getDataForTest(testId);
+                        isBugsForTestExist = true;
+                        setDeleteButtonState(true);
+                    }
+                }
+
+            }
+        }
+
+
+        function updateBugData() {
+            var data = getAllBugsData();
+            if(data !== null) {
+                var testId = getTestId();
+                var dataJson = JSON.parse(data);
+                $.each(dataJson, function(index, value){
+                    if(value.testId === testId) {
+                        var bugNumber = getBugNumber();
+                        var errorDescription = getErrorDescription();
+                        if(bugNumber === '') {
+                            showError("Task id field is empty.");
+                        } else if(errorDescription === '') {
+                            showError("Error text field is empty.");
+                        } else {
+                            value.taskId = bugNumber;
+                            value.errorMessage = errorDescription;
+                            dataJson[index] = value;
+                            var saveStatus = saveData(dataJson);
+                            if(saveStatus === successSaveStatus) {
+                                getDataForTest(testId);
+                            }
+                            return;
+                        }
+                    }
+                });
+            }
+        }
+
+
+        function save() {
+            if(!isBugsForTestExist) {
+                addNewBugData();
+            } else {
+                updateBugData();
+            }
+        }
+
+        function getErrorValue(testId){
+            return "error for test : " + testId;
+        }
+
+        function getTestId() {
+            return $(".links-block").attr("id");
+        }
+
+
+        function getRequestBase() {
+            return "{requestBase}"
+        }
+
+        function getAllBugsData(){
+            var dataFromFile = null;
+            $.ajax({
+                type: 'get',
+                url: getRequestBase() + storageDataKey,
+                async: false,
+                dataType: 'text',
+                success: function(data) {
+                    dataFromFile = data;
+                    if (dataFromFile === undefined){
+                        dataFromFile = '[]'
+                    }
+                },
+                error: function(data){
+                    showError("Error while read links data from storage");
+                }
+            });
+            return dataFromFile;
+        }
+
+        function getDataForTest(testId) {
+            var allBugsData = getAllBugsData();
+            if(allBugsData !== null) {
+                var testData = getTestDataFromString(allBugsData, testId);
+                if(testData !== null) {
+                    isBugsForTestExist = true;
+                    setFieldsValues(testData.taskId, testData.errorMessage);
+                    setDeleteButtonState(true);
+                } else {
+                    isBugsForTestExist = false;
+                    setFieldsValues('','');
+                    setDeleteButtonState(false);
+                }
+            }
+        }
+
+        function setDeleteButtonState(state){
+            if(state) {
+                $("#delete_button").removeAttr("disabled");
+            } else {
+                $("#delete_button").attr("disabled", "disabled");
+            }
+        }
+
+        function getTestDataFromString(dataString, testId) {
+            var dataJson = JSON.parse(dataString);
+            var testData = null;
+            $.each(dataJson, function(index, value){
+               if(value.testId === testId) {
+                   testData = value;
+               }
+            });
+            return testData;
+        }
+
+        function showError(message){
+            showMessage(message,'red')
+        }
+
+        function showMessage(message, color){
+            var errorTextField = $("#error_text");
+            errorTextField.css('color', color)
+            errorTextField.html(message);
+            errorTextField.show();
+        }
+
+        function showSuccessMessage(message){
+            showMessage(message,'green')
+        }
+
+        function hideError(){
+            $("#error_text").hide();
+        }
+
+        function getIssueLink(issueNumber) {
+            return testManagementSystemUrl + "/" +issueNumber;
+        }
+
+
+        function setIssueLink(issueLink) {
+            if(issueLink !== testManagementSystemUrl && isBugsForTestExist) {
+                $("#task_link").attr("href", issueLink).show();
+            } else {
+                $("#task_link").hide();
+            }
+
+        }
+
+
+        function setIssueNumber(issueNumber) {
+            $("#task_number").val(issueNumber);
+            setIssueLink(getIssueLink(issueNumber));
+        }
+
+
+        function setDescription(description) {
+            $("#error_field").val(description);
+        }
+        function setFieldsValues(issueNumber, description){
+            setIssueNumber(issueNumber);
+            setDescription(description);
+        }
+
+
+    </script>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div class="links-block container-fluid" id="{testId}" style="padding-left: 50px;padding-top: 30px">
+    <div class="row" style="width: 150px">
+        <div class="title_text">Task id: </div>
+        <textarea class='form-control' rows='1' id="task_number" ></textarea>
+        <small id="task_id_help" class="form-text text-muted">Enter your task id here</small>
+        <a target="_blank" href="" id="task_link" style="display: none; color: blue">Task link</a>
+    </div>
+    <div class="row" style="padding-top: 10px; width: 500px">
+        <div class="title_text">Error: </div>
+        <textarea class='form-control' rows='3' id="error_field" ></textarea>
+        <small id="error_field_help" class="form-text text-muted">You can add here error message text, or `{all}` to skip for all errors, or regexp for your message text</small>
+    </div>
+    <div class="row" style="padding-top: 10px;width: 150px">
+        <button class='btn btn-primary btn-block' onclick="save()">Save link</button>
+        <button class='btn btn-danger btn-block' id="delete_button" disabled="disabled" onclick="deleteBugLink()">Delete link</button>
+    </div>
+    <div class="row" style="padding-top: 20px;">
+        <h5 style="display: none" id="error_text"></h5>
+    </div>
+
+</div>
+</body>
+</html>
