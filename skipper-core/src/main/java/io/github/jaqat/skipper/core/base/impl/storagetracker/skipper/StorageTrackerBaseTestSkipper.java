@@ -28,7 +28,7 @@ public class StorageTrackerBaseTestSkipper implements TestSkipper {
         taskTrackerService.getTaskData(prepareTestData(data, testData));
         addForm();
         //here some logic to skip data. Maybe one more class with logic??? and skip at all
-        return new SkipTestInfo();
+        return new SkipTestInfo(false, "");
     }
 
     private TaskSearchCriteria prepareTestData(List<StorageLinksData> data, TestData testData) {

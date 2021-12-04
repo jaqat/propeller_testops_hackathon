@@ -4,15 +4,20 @@ package io.github.jaqat.skipper.core.domain;
  * info about test skip
  */
 public class SkipTestInfo {
-    private boolean needSkipTest;
+    private boolean needToSkipTest;
     private String skipMessage;
 
-    public boolean isNeedSkipTest() {
-        return needSkipTest;
+    public SkipTestInfo(boolean needToSkipTest, String skipMessage) {
+        this.needToSkipTest = needToSkipTest;
+        this.skipMessage = skipMessage;
     }
 
-    public SkipTestInfo setNeedSkipTest(boolean needSkipTest) {
-        this.needSkipTest = needSkipTest;
+    public boolean isNeedToSkipTest() {
+        return needToSkipTest;
+    }
+
+    public SkipTestInfo setNeedToSkipTest(boolean needToSkipTest) {
+        this.needToSkipTest = needToSkipTest;
         return this;
     }
 

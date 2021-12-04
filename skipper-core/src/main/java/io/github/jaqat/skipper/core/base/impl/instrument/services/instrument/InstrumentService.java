@@ -1,5 +1,6 @@
 package io.github.jaqat.skipper.core.base.impl.instrument.services.instrument;
 
+import io.github.jaqat.skipper.core.domain.SkipTestInfo;
 import io.github.jaqat.skipper.core.domain.TestData;
 
 /**
@@ -12,5 +13,5 @@ public interface InstrumentService {
      * @param testData test data
      * @return true if need to skip test
      */
-    boolean needToSkipTest(TestData testData);
+    SkipTestInfo needToSkipTest(TestData testData);
 }
