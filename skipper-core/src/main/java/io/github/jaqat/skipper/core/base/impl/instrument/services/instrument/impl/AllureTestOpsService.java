@@ -1,29 +1,57 @@
 package io.github.jaqat.skipper.core.base.impl.instrument.services.instrument.impl;
 
 import io.github.jaqat.skipper.core.base.impl.instrument.services.instrument.InstrumentService;
+import io.github.jaqat.skipper.core.domain.SkipTestInfo;
 import io.github.jaqat.skipper.core.domain.TestData;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpCookie;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpHeaders;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.lang.String.format;
 
 public class AllureTestOpsService implements InstrumentService {
 
     private final static String PROPERTIES_FILE_NAME = "allure-test-ops-fail-skipper.properties";
-
     private Properties allureProperties;
-
-    public AllureClient allureClient;
-
     private List<DefectMatcher> activeDefectMatchers;
+
+    public AllureTestOpsService() {
+        allureProperties = loadProperties();
+        activeDefectMatchers = new ArrayList<>();
+        if (!allureProperties.isEmpty()) {
+            try {
+                AllureClient allureClient = new AllureClient(allureProperties);
+
+                List<Defect> projectDefects = allureClient.getDefects()
+                        .stream()
+                        .filter(defect -> !defect.getClosed())
+                        .collect(Collectors.toList());
+
+                List<DefectMatcher> defectMatchers = projectDefects.stream()
+                        .flatMap(defect -> {
+                            try {
+                                return allureClient.getDefectMatchers(defect.getId()).stream();
+                            } catch (IOException | InterruptedException e) {
+                                System.err.println("Error while getting defect #" + defect.getId() + " matchers");
+                            }
+                            return Stream.empty();
+                        })
+                        .collect(Collectors.toList());
+                activeDefectMatchers.addAll(
+                        defectMatchers
+                );
+            } catch (Exception e) {
+                System.err.println("Can't get defects from Allure: " + e.getMessage());
+            }
+        }
+    }
 
     private static Properties loadProperties() {
         Properties properties = new Properties();
@@ -35,75 +63,32 @@ public class AllureTestOpsService implements InstrumentService {
         return properties;
     }
 
-    public AllureTestOpsService() {
-        allureProperties = loadProperties();
-
-        AllureClient allureClient = new AllureClient(allureProperties);
-        allureClient.auth();
-        activeDefectMatchers = allureClient.getDefects()
-                .stream()
-                .filter(defect -> defect.getClosed() == false)
-                .flatMap(defect -> allureClient.getDefectMatchers(defect.getId()).stream())
-                .collect(Collectors.toList());
-    }
-
-    public static void main(String[] args) {
-
-    }
-
     @Override
-    public boolean needToSkipTest(TestData testData) {
-        if (allureProperties.isEmpty()) {
-            return false;
-        }
+    public SkipTestInfo needToSkipTest(TestData testData) {
+        if (!activeDefectMatchers.isEmpty()) {
+            DefectMatcher suitableDefectMatcher = activeDefectMatchers.stream().parallel()
+                    .filter(defectMatcher -> {
+                                Pattern pattern = Pattern.compile(defectMatcher.getMessageRegex());
+                                Matcher matcher = pattern.matcher(testData.getErrorMessage());
+                                return matcher.find();
+                            }
+                    )
+                    .findFirst()
+                    .orElse(null);
 
-        int allureId = (Integer) testData.getTestData().get("allureId");
+            if (suitableDefectMatcher != null) {
+                return new SkipTestInfo(
+                        true,
+                        format(
+                                "Skipped by Defect #%d with rule: %s",
+                                suitableDefectMatcher.getDefectId(),
+                                suitableDefectMatcher.getName()
 
-        // get Allure defects
-
-        return false;
-    }
-
-    private HttpCookie allureAuth(Properties properties) {
-
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(properties.get("allure.url") + "/api/login/system"))
-                .POST(HttpRequest.BodyPublishers.ofString(
-                        String.format(
-                                "username=%s&password=%s",
-                                properties.get("allure.user"),
-                                properties.get("allure.password")
                         )
-                ))
-                .build();
-
-        HttpResponse<Void> response = null;
-        try {
-            response = client.send(request,
-                    HttpResponse.BodyHandlers.discarding());
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-            return null;
+                );
+            }
         }
 
-        HttpHeaders headers = response.headers();
-        String setCookieValue = headers.firstValue("set-cookie").orElse("");
-        List<HttpCookie> setCookies = HttpCookie.parse(setCookieValue);
-        return setCookies.stream().filter(cookie -> cookie.getName().equals("ALLURE_TESTOPS_SESSION")).findFirst().orElse(null);
-
-        //        const response = await axios.post(
-//                `${finalAllureUrl}/api/login/system`,
-//            `username=${config.allureUser}&password=${config.allurePassword}`,
-//        {
-//            headers: {
-//                'Content-Type': 'application/x-www-form-urlencoded',
-//                        Authorization: `Bearer ${config.userApiToken}`,
-//            },
-//        },
-//        );
-//        const setCookiesHeader = setCookie.parse(response.headers['set-cookie']);
-//        const authCookie = setCookiesHeader.filter(it => it.name === 'ALLURE_TESTOPS_SESSION')[0];
-//        return `${authCookie.name}=${authCookie.value}`;
+        return new SkipTestInfo(false, "");
     }
 }

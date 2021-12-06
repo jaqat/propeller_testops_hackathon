@@ -17,9 +17,6 @@ public class InstrumentBaseTestSkipper implements TestSkipper {
 
     @Override
     public SkipTestInfo skipTestIfNeeded(TestData testData) {
-        if (instrumentService.needToSkipTest(testData)) {
-            return new SkipTestInfo();
-        }
-        return new SkipTestInfo();
+        return instrumentService.needToSkipTest(testData);
     }
 }

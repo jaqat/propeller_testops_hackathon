@@ -15,7 +15,23 @@ public class TestData {
         return testMethod;
     }
 
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
     public Map<String, Object> getTestData() {
         return testData;
+    }
+
+    public void setTestMethod(Method testMethod) {
+        this.testMethod = testMethod;
+    }
+
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
+
+    public void setTestData(Map<String, Object> testData) {
+        this.testData = testData;
     }
 }
