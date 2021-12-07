@@ -10,9 +10,9 @@ public interface TaskTrackerService {
 
     /**
      * get task browse url - need to use from form
-     * @return url to task for browse
+     * @return base url for browse tasks without task id
      */
-    String getTaskBrowseUrl();
+    String getTasksBrowseUrl();
 
     /**
      * get data about task from task tracker

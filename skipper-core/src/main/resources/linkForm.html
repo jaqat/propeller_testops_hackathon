@@ -17,8 +17,8 @@
     </style>
     <script type="text/javascript">
         var isBugsForTestExist = false;
-        var dataFileForTests = "{storageFilePath}";
-        var testManagementSystemUrl = "{bugTrackerUrl}";
+        var storageDataKey = "{storageDataKey}";
+        var testManagementSystemUrl = "{bugTrackerBrowseUrl}";
         var successSaveStatus = 1;
         var errorSaveStatus = -1;
 
@@ -54,7 +54,7 @@
             var status;
             $.ajax({
                 type: 'post',
-                url: getRequestBase() + dataFileForTests,
+                url: getRequestBase() + storageDataKey,
                 async: false,
                 dataType: 'text',
                 data : JSON.stringify(dataJson),
@@ -96,7 +96,7 @@
                 } else {
                     var bugData = {
                         testId : testId,
-                        bugId : bugNumber,
+                        taskId : bugNumber,
                         errorMessage : errorDescription
                     };
                     bugs.push(bugData);
@@ -126,7 +126,7 @@
                         } else if(errorDescription === '') {
                             showError("Error text field is empty.");
                         } else {
-                            value.bugId = bugNumber;
+                            value.taskId = bugNumber;
                             value.errorMessage = errorDescription;
                             dataJson[index] = value;
                             var saveStatus = saveData(dataJson);
@@ -166,7 +166,7 @@
             var dataFromFile = null;
             $.ajax({
                 type: 'get',
-                url: getRequestBase() + dataFileForTests,
+                url: getRequestBase() + storageDataKey,
                 async: false,
                 dataType: 'text',
                 success: function(data) {
@@ -188,7 +188,7 @@
                 var testData = getTestDataFromString(allBugsData, testId);
                 if(testData !== null) {
                     isBugsForTestExist = true;
-                    setFieldsValues(testData.bugId, testData.errorMessage);
+                    setFieldsValues(testData.taskId, testData.errorMessage);
                     setDeleteButtonState(true);
                 } else {
                     isBugsForTestExist = false;
@@ -237,7 +237,7 @@
         }
 
         function getIssueLink(issueNumber) {
-            return testManagementSystemUrl + issueNumber;
+            return testManagementSystemUrl + "/" +issueNumber;
         }
 
 

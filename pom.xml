@@ -7,10 +7,27 @@
     <version>1.0</version>
 
     <properties>
+        <!--        surefire -->
+        <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
+        <surefire.tmp.dir></surefire.tmp.dir>
+        <surefire.Xmx>2048</surefire.Xmx>
+        <surefire.MaxMetaspaceSize>256</surefire.MaxMetaspaceSize>
+
         <!-- Java -->
         <java.version>13</java.version>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.compiler.source>${java.version}</maven.compiler.source>
+        <!--        junit params-->
+        <junit.version>5.8.0-RC1</junit.version>
+        <junit.platform.version>1.8.0-RC1</junit.platform.version>
+
+        <!--        allure params-->
+        <allure.maven.plugin.version>2.10.0</allure.maven.plugin.version>
+        <allure.junit.platform.version>2.13.3</allure.junit.platform.version>
+        <allure-generator.version>2.13.2</allure-generator.version>
+
+        <aspectj.version>1.9.6</aspectj.version>
+
 
     </properties>
 
@@ -21,5 +38,78 @@
         <module>skipper-junit5</module>
     </modules>
 
-
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${junit.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit.version}</version>
+            </dependency>
+            <!-- need for attach form to allure -->
+            <dependency>
+                <groupId>io.qameta.allure</groupId>
+                <artifactId>allure-junit-platform</artifactId>
+                <version>${allure.junit.platform.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.junit.platform</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>junit-jupiter</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven-surefire-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>test</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <argLine>
+                        -Xmx${surefire.Xmx}m -XX:MaxMetaspaceSize=${surefire.MaxMetaspaceSize}m
+                        -javaagent:${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar
+                    </argLine>
+                    <workingDirectory>${project.build.directory}/${surefire.tmp.dir}</workingDirectory>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.aspectj</groupId>
+                        <artifactId>aspectjweaver</artifactId>
+                        <version>${aspectj.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>io.qameta.allure</groupId>
+                <artifactId>allure-maven</artifactId>
+                <version>${allure.maven.plugin.version}</version>
+                <configuration>
+                    <allureDownloadUrl>
+                        https://repo1.maven.org/maven2/io/qameta/allure/allure-commandline/%s/allure-commandline-%s.zip
+                    </allureDownloadUrl>
+                    <reportVersion>${allure-generator.version}</reportVersion>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

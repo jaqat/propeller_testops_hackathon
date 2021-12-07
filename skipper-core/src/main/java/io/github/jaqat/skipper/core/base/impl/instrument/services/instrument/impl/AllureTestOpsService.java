@@ -3,6 +3,7 @@ package io.github.jaqat.skipper.core.base.impl.instrument.services.instrument.im
 import io.github.jaqat.skipper.core.base.impl.instrument.services.instrument.InstrumentService;
 import io.github.jaqat.skipper.core.domain.SkipTestInfo;
 import io.github.jaqat.skipper.core.domain.TestData;
+import io.github.jaqat.skipper.core.utils.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,9 +19,11 @@ import static java.lang.String.format;
 
 public class AllureTestOpsService implements InstrumentService {
 
+    private static final Logger LOGGER = new Logger(AllureTestOpsService.class);
     private final static String PROPERTIES_FILE_NAME = "allure-test-ops-fail-skipper.properties";
     private Properties allureProperties;
     private List<DefectMatcher> activeDefectMatchers;
+
 
     public AllureTestOpsService() {
         allureProperties = loadProperties();
@@ -39,7 +42,8 @@ public class AllureTestOpsService implements InstrumentService {
                             try {
                                 return allureClient.getDefectMatchers(defect.getId()).stream();
                             } catch (IOException | InterruptedException e) {
-                                System.err.println("Error while getting defect #" + defect.getId() + " matchers");
+                                e.printStackTrace();
+                                LOGGER.error("Error while getting defect #" + defect.getId() + " matchers");
                             }
                             return Stream.empty();
                         })
@@ -48,7 +52,8 @@ public class AllureTestOpsService implements InstrumentService {
                         defectMatchers
                 );
             } catch (Exception e) {
-                System.err.println("Can't get defects from Allure: " + e.getMessage());
+                e.printStackTrace();
+                LOGGER.error("Can't get defects from Allure: " + e.getMessage());
             }
         }
     }
@@ -58,7 +63,8 @@ public class AllureTestOpsService implements InstrumentService {
         try (InputStream input = ClassLoader.getSystemResourceAsStream(PROPERTIES_FILE_NAME)) {
             properties.load(input);
         } catch (IOException ex) {
-            System.err.println("Can't find file:" + PROPERTIES_FILE_NAME);
+            ex.printStackTrace();
+            LOGGER.error("Can't find file:" + PROPERTIES_FILE_NAME);
         }
         return properties;
     }
@@ -89,6 +95,6 @@ public class AllureTestOpsService implements InstrumentService {
             }
         }
 
-        return new SkipTestInfo(false, "");
+        return new SkipTestInfo(false, null);
     }
 }

@@ -2,7 +2,7 @@ package io.github.jaqat.skipper.core.base.impl.storagetracker.services.storage;
 
 import io.github.jaqat.skipper.core.base.impl.storagetracker.services.storage.domain.StorageLinksData;
 
-import java.net.URL;
+import java.net.URI;
 import java.util.List;
 
 /**
@@ -15,12 +15,24 @@ public interface StorageService {
      *
      * @return api base url
      */
-    URL getStorageApiUrl();
+    URI getStorageApiUrl();
 
     /**
      * get  tests with tasks links from storage
      *
-     * @return list of links objects
+     * @return list of links objects or empty list
      */
     List<StorageLinksData> getStorageData();
+
+    /**
+     * method to init storage
+     */
+    void initStorage();
+
+    /**
+     * get key for storage - need to store data via api from form
+     *
+     * @return key
+     */
+    String getDataKey();
 }

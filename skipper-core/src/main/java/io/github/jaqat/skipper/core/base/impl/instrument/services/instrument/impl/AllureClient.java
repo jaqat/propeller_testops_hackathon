@@ -5,11 +5,10 @@ import com.jayway.jsonpath.spi.json.GsonJsonProvider;
 import com.jayway.jsonpath.spi.json.JsonProvider;
 import com.jayway.jsonpath.spi.mapper.GsonMappingProvider;
 import com.jayway.jsonpath.spi.mapper.MappingProvider;
+import io.github.jaqat.skipper.core.utils.HttpUtils;
 
 import java.io.IOException;
-import java.net.CookieManager;
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.*;
@@ -20,9 +19,7 @@ public class AllureClient {
     private Integer projectId;
     private String token;
 
-    private HttpClient httpClient = HttpClient.newBuilder()
-            .cookieHandler(new CookieManager())
-            .build();
+    private static final HttpUtils HTTP_UTILS = new HttpUtils();
 
     public AllureClient(Properties properties) {
         this.url = properties.getProperty("allure.url");
@@ -58,7 +55,7 @@ public class AllureClient {
                 .GET()
                 .build();
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = HTTP_UTILS.sendRequest(request);
             if (response.statusCode() == 200) {
                 DocumentContext jsonContext = JsonPath.parse(response.body());
                 return jsonContext.read("$['content'][*]", new TypeRef<>() {
@@ -76,7 +73,7 @@ public class AllureClient {
                 .header("Authorization", "Api-Token " + token)
                 .GET()
                 .build();
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = HTTP_UTILS.sendRequest(request);
             DocumentContext jsonContext = JsonPath.parse(response.body());
             return jsonContext.read("$['content'][*]", new TypeRef<List<DefectMatcher>>() {
             });

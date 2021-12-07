@@ -18,19 +18,22 @@ public class BaseTestSkipperExtension implements TestExecutionExceptionHandler {
 
     @Override
     public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
-        context.getTestMethod().ifPresent(
-                testMethod -> {
-                    TestData testData = new TestData();
-                    testData.setTestMethod(testMethod);
-                    testData.setErrorMessage(throwable.getMessage());
-                    SkipTestInfo skipTestInfo = testSkipper.skipTestIfNeeded(testData);
-                    assumeFalse(
-                            skipTestInfo.isNeedToSkipTest(),
-                            skipTestInfo.getSkipMessage()
-                    );
-                }
-        );
-
+        if (context.getTestMethod().isPresent()) {
+            TestData testData =
+                    new TestData()
+                            .setTestMethod(context.getTestMethod().get())
+                            .setTestClass(context.getTestClass().get())
+                            .setErrorMessage(throwable.getMessage());
+            SkipTestInfo skipTestInfo = testSkipper.skipTestIfNeeded(testData);
+            if (skipTestInfo.isNeedToSkipTest()) {
+                assumeFalse(
+                        true,
+                        skipTestInfo.getSkipMessage()
+                );
+            } else {
+                throw throwable;
+            }
+        }
     }
 
 }
