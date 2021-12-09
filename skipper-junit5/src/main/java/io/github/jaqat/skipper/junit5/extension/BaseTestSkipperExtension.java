@@ -23,7 +23,8 @@ public class BaseTestSkipperExtension implements TestExecutionExceptionHandler {
                     new TestData()
                             .setTestMethod(context.getTestMethod().get())
                             .setTestClass(context.getTestClass().get())
-                            .setErrorMessage(throwable.getMessage());
+                            .setErrorMessage(throwable.getMessage())
+                            .setTestName(context.getUniqueId());
             SkipTestInfo skipTestInfo = testSkipper.skipTestIfNeeded(testData);
             if (skipTestInfo.isNeedToSkipTest()) {
                 assumeFalse(

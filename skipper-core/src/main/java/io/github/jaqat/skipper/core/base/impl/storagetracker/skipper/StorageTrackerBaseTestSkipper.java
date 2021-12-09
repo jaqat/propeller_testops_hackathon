@@ -11,7 +11,6 @@ import io.github.jaqat.skipper.core.domain.SkipTestInfo;
 import io.github.jaqat.skipper.core.domain.TestData;
 import io.github.jaqat.skipper.core.utils.ResourcesUtils;
 import io.qameta.allure.Allure;
-import io.qameta.allure.Attachment;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -49,7 +48,7 @@ public class StorageTrackerBaseTestSkipper implements TestSkipper {
                     return new SkipTestInfo(false, "No need to skip test: no data for task found in task tracker");
                 } else {
                     if (!issueResolveMapper.isIssueResolved(taskData)) {
-                        //TODO: verify message
+                        //TODO: verify message by error message
                         return new SkipTestInfo(
                                 true,
                                 String.format(
@@ -85,8 +84,10 @@ public class StorageTrackerBaseTestSkipper implements TestSkipper {
     }
 
     private String getTestId(TestData testData) {
-        return getMD5FromTestName(testData.getTestClass().getName()
-                + testData.getTestMethod().getName());
+        return getMD5FromTestName(
+                testData.getTestClass().getName() +
+                        testData.getTestMethod().getName() +
+                        testData.getTestName());
     }
 
     private void addForm(TestData testData) {

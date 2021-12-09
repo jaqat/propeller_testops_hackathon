@@ -11,6 +11,7 @@ public class TestData {
     private Method testMethod;
     private Class testClass;
     private String errorMessage;
+    private String testName;
     private Map<String, Object> testAdditionalData; //TODO: just an ANY additional data
 
     public Method getTestMethod() {
@@ -19,6 +20,10 @@ public class TestData {
 
     public Class getTestClass() {
         return testClass;
+    }
+
+    public String getTestName() {
+        return testName;
     }
 
     public String getErrorMessage() {
@@ -54,6 +59,11 @@ public class TestData {
             testAdditionalData = new HashMap<>();
         }
         testAdditionalData.put(key, data);
+        return this;
+    }
+
+    public TestData setTestName(String testName) {
+        this.testName = testName;
         return this;
     }
 }
