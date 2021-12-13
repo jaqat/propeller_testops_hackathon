@@ -74,9 +74,10 @@ public class AllureTestOpsService implements InstrumentService {
                 return new SkipTestInfo(
                         true,
                         format(
-                                "Skipped by Defect #%d with rule: %s",
+                                "Skipped by Defect #%d (automation rule #%d) with message: %s",
                                 suitableDefectMatcher.getDefectId(),
-                                suitableDefectMatcher.getName()
+                                suitableDefectMatcher.getId(),
+                                suitableDefectMatcher.getMessageRegex()
 
                         )
                 );
