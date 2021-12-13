@@ -19,6 +19,12 @@ public class StorageSkipperTest {
         assertTrue(true);
     }
 
+    @Test
+    @DisplayName("Failed simple test")
+    void failedTest() {
+        assertTrue(false);
+    }
+
     @ParameterizedTest(name = "Parametrized failed test: {0}")
     @ValueSource(strings = {"12", "13", "14"})
     void failedParametrizedTest(String name) {
